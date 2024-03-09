@@ -1,0 +1,39 @@
+# 刘昕垚
+# 2200012866
+
+.pos 0
+irmovq stack, %rsp
+call main
+halt
+
+# linked list
+    .align 8
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+
+main:
+    irmovq ele1, %rdi
+    call sum_list
+    ret
+
+sum_list:
+    xorq %rax, %rax # val = 0
+    jmp test # Goto test
+loop:
+    mrmovq (%rdi), %r10 # tmp = ls->val;
+    addq %r10, %rax # val += tmp;
+    mrmovq 8(%rdi), %rdi # ls = ls->next;
+test:
+    andq %rdi, %rdi # 对链表节点进行判断
+    jne loop # 若不等于0则继续循环
+    ret
+
+    .pos 0x200 
+stack:

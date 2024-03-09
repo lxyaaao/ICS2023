@@ -1,0 +1,57 @@
+# 刘昕垚
+# 2200012866
+
+.pos 0
+irmovq stack, %rsp
+call main
+halt
+
+    .align 8
+Array:
+    .quad 0xbca
+    .quad 0xcba
+    .quad 0xacb
+    .quad 0xcab
+    .quad 0xabc
+    .quad 0xbac
+
+main:
+    irmovq Array, %rdi
+    irmovq $6, %rsi
+    call bubble_sort
+    ret
+
+bubble_sort:
+    irmovq $8,%r8 # 立即数8
+    rrmovq %rdi, %rcx # last在%rcx里
+    irmovq $40, %r9
+    addq %r9, %rcx
+
+loop1:
+    rrmovq %rcx, %r10
+    subq %rdi, %r10
+    jle end
+    rrmovq %rdi, %rdx # i在%rdx里
+loop2:
+    rrmovq %rdx, %r10
+    subq %rcx, %r10
+    jg loop4
+    mrmovq (%rdx), %r10 # *i
+    mrmovq 8(%rdx), %r11 # *(i+1)
+    rrmovq %r10, %r12
+    subq %r11, %r12
+    jle loop3
+    rrmovq %r10, %r12
+    rmmovq %r11, (%rdx)
+    rmmovq %r12, 8(%rdx) # swap操作
+loop3:
+    addq %r8, %rdx
+    jmp loop2
+loop4:
+    subq %r8, %rcx
+    jmp loop1
+end:
+    ret
+
+    .pos 0x200 
+stack:

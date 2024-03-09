@@ -1,0 +1,206 @@
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+# 刘昕垚 2200012866
+# Describe how and why you modified the baseline code.
+# 1. 将addq和subq替换为iaddq
+# 2. 先进行10*1循环展开，并通过两个寄存器轮流存值来减少bubble
+# 3. 对于小于10的数进行类似于二分的处理方法，先与4作比较，再与6作比较，分别跳转
+# 4. 本来想的是跳转后用2个寄存器轮流存值，但是产生了program too long的错误（蒽……）所以只能通过每次跳转后内部进行操作
+#    如果不进行任何处理直接 mrmovq 40(%rdi), %r9  rmmovq %r9, 40(%rsi) 会在load/use时产生无数bubble，因此只能提前mrmovq
+#    经过尝试（蒽……），先mrmovq再用之前的保存的cc值跳转后计算新的cc值为下一次跳转使用正确且效率最高
+# 5. 删去第一行
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# You can modify this portion
+# Loop header
+	iaddq $-10, %rdx
+	jl fdone		# if so, goto next:
+
+L0:	
+	mrmovq (%rdi), %r10	# read val from src
+	mrmovq 8(%rdi), %r11 #read next val from src
+	rmmovq %r10, (%rsi)	# and store val to dst
+	andq %r10, %r10		# val <= 0?
+	jle L1		# if so, goto L1:
+	iaddq $1, %rax		# count++
+
+L1:
+	rmmovq %r11, 8(%rsi)
+	mrmovq 16(%rdi), %r10
+	andq %r11, %r11	
+	jle L2	
+	iaddq $1, %rax
+
+L2:
+	rmmovq %r10, 16(%rsi)
+	mrmovq 24(%rdi), %r11
+	andq %r10, %r10	
+	jle L3	
+	iaddq $1, %rax
+
+L3:
+	rmmovq %r11, 24(%rsi)
+	mrmovq 32(%rdi), %r10
+	andq %r11, %r11	
+	jle L4	
+	iaddq $1, %rax
+
+L4:
+	rmmovq %r10, 32(%rsi)
+	mrmovq 40(%rdi), %r11
+	andq %r10, %r10	
+	jle L5	
+	iaddq $1, %rax
+
+L5:
+	rmmovq %r11, 40(%rsi)
+	mrmovq 48(%rdi), %r10
+	andq %r11, %r11	
+	jle L6	
+	iaddq $1, %rax
+
+L6:
+	rmmovq %r10, 48(%rsi)
+	mrmovq 56(%rdi), %r11
+	andq %r10, %r10	
+	jle L7	
+	iaddq $1, %rax
+
+L7:
+	rmmovq %r11, 56(%rsi)
+	mrmovq 64(%rdi), %r10
+	andq %r11, %r11	
+	jle L8	
+	iaddq $1, %rax
+
+L8:
+	rmmovq %r10, 64(%rsi)
+	mrmovq 72(%rdi), %r11
+	andq %r10, %r10	
+	jle L9	
+	iaddq $1, %rax
+
+L9:
+	rmmovq %r11, 72(%rsi)
+	andq %r11, %r11	
+	jle test	
+	iaddq $1, %rax
+
+test:
+	iaddq $80, %rdi
+	iaddq $80, %rsi
+	iaddq $-10, %rdx
+	jge L0
+
+fdone:
+    iaddq $6, %rdx # 判断与4的大小
+    jl BEYOND4
+    jg ABOVE4
+    je NEXT4
+
+BEYOND4:
+    iaddq $3, %rdx # 判断与1的大小
+    je NEXT1
+    iaddq $-1, %rdx # 判断与2的大小
+    je NEXT2
+	iaddq $-1, %rdx # 判断与3的大小
+	je NEXT3
+    ret
+ABOVE4:
+    iaddq $-2, %rdx # 判断与6的大小
+    jg ABOVE6
+    jl NEXT5
+    je NEXT6
+ABOVE6:
+    iaddq $-2, %rdx # 判断与8的大小
+	jl NEXT7
+    je NEXT8
+
+	mrmovq 64(%rdi), %r8 # src[8]
+	rmmovq %r8, 64(%rsi)
+    andq %r8, %r8
+
+NEXT8:
+	mrmovq 56(%rdi), %r9
+    jle LAST8
+    iaddq $1, %rax
+LAST8:
+    rmmovq %r9, 56(%rsi)
+    andq %r9, %r9
+
+NEXT7:
+	mrmovq 48(%rdi), %r8
+	jle LAST7
+    iaddq $1, %rax
+LAST7:
+    rmmovq %r8, 48(%rsi)
+    andq %r8, %r8
+
+NEXT6:
+    mrmovq 40(%rdi), %r9
+	jle LAST6
+    iaddq $1, %rax
+LAST6:
+    rmmovq %r9, 40(%rsi)
+    andq %r9, %r9
+
+NEXT5:
+    mrmovq 32(%rdi), %r8
+	jle LAST5
+    iaddq $1, %rax
+LAST5:
+    rmmovq %r8, 32(%rsi)
+    andq %r8, %r8
+
+NEXT4:
+    mrmovq 24(%rdi), %r9
+	jle LAST4
+    iaddq $1, %rax
+LAST4:
+    rmmovq %r9, 24(%rsi)
+    andq %r9, %r9
+
+NEXT3:
+    mrmovq 16(%rdi), %r8
+	jle LAST3
+    iaddq $1, %rax
+LAST3:
+    rmmovq %r8, 16(%rsi)
+    andq %r8, %r8
+
+NEXT2:
+    mrmovq 8(%rdi), %r9
+	jle LAST2
+    iaddq $1, %rax
+LAST2:
+    rmmovq %r9, 8(%rsi)
+    andq %r9, %r9
+
+NEXT1:
+    mrmovq (%rdi), %r8
+	jle LAST1
+    iaddq $1, %rax
+LAST1:
+    rmmovq %r8, (%rsi)
+    andq %r8, %r8
+	jle Done
+    iaddq $1, %rax
+	
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */

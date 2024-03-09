@@ -1,0 +1,259 @@
+#######################################################################
+# Test for copying block of size 4;
+#######################################################################
+	.pos 0
+main:	irmovq Stack, %rsp  	# Set up stack pointer
+
+	# Set up arguments for copy function and then invoke it
+	irmovq $4, %rdx		# src and dst have 4 elements
+	irmovq dest, %rsi	# dst array
+	irmovq src, %rdi	# src array
+	call ncopy		 
+	halt			# should halt with num nonzeros in %rax
+StartFun:
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len words to dst.
+# Return the number of positive words (>0) contained in src.
+#
+# Include your name and ID here.
+# 刘昕垚 2200012866
+# Describe how and why you modified the baseline code.
+# 1. 将addq和subq替换为iaddq，CPE：15.18->13左右（ssh断了没保存忘记了qwq）
+# 2. 先进行6*1循环展开，并减少bubble，CPE：->9.08
+# 3. 
+##################################################################
+# Do not modify this portion
+# Function prologue.
+# %rdi = src, %rsi = dst, %rdx = len
+ncopy:
+
+##################################################################
+# You can modify this portion
+# Loop header
+	iaddq $-10, %rdx
+	jl fdone		# if so, goto next:
+
+L0:	
+	mrmovq (%rdi), %r10	# read val from src
+	mrmovq 8(%rdi), %r11 #read next val from src
+	rmmovq %r10, (%rsi)	# and store val to dst
+	andq %r10, %r10		# val <= 0?
+	jle L1		# if so, goto L1:
+	iaddq $1, %rax		# count++
+
+L1:
+	rmmovq %r11, 8(%rsi)
+	mrmovq 16(%rdi), %r10
+	andq %r11, %r11	
+	jle L2	
+	iaddq $1, %rax
+
+L2:
+	rmmovq %r10, 16(%rsi)
+	mrmovq 24(%rdi), %r11
+	andq %r10, %r10	
+	jle L3	
+	iaddq $1, %rax
+
+L3:
+	rmmovq %r11, 24(%rsi)
+	mrmovq 32(%rdi), %r10
+	andq %r11, %r11	
+	jle L4	
+	iaddq $1, %rax
+
+L4:
+	rmmovq %r10, 32(%rsi)
+	mrmovq 40(%rdi), %r11
+	andq %r10, %r10	
+	jle L5	
+	iaddq $1, %rax
+
+L5:
+	rmmovq %r11, 40(%rsi)
+	mrmovq 48(%rdi), %r10
+	andq %r11, %r11	
+	jle L6	
+	iaddq $1, %rax
+
+L6:
+	rmmovq %r10, 48(%rsi)
+	mrmovq 56(%rdi), %r11
+	andq %r10, %r10	
+	jle L7	
+	iaddq $1, %rax
+
+L7:
+	rmmovq %r11, 56(%rsi)
+	mrmovq 64(%rdi), %r10
+	andq %r11, %r11	
+	jle L8	
+	iaddq $1, %rax
+
+L8:
+	rmmovq %r10, 64(%rsi)
+	mrmovq 72(%rdi), %r11
+	andq %r10, %r10	
+	jle L9	
+	iaddq $1, %rax
+
+L9:
+	rmmovq %r11, 72(%rsi)
+	andq %r11, %r11	
+	jle test	
+	iaddq $1, %rax
+
+test:
+	iaddq $80, %rdi
+	iaddq $80, %rsi
+	iaddq $-10, %rdx
+	jge L0
+
+fdone:
+    iaddq $7, %rdx # 判断与3的大小
+    jl BEYOND3
+    jg ABOVE3
+	mrmovq 16(%rdi), %r8
+    je NEXT3
+
+BEYOND3:
+    iaddq $2, %rdx # 判断与1的大小
+	mrmovq (%rdi), %r8
+    je NEXT1
+    iaddq $-1, %rdx # 判断与2的大小
+	mrmovq 8(%rdi), %r9
+    je NEXT2
+    ret
+ABOVE3:
+    iaddq $-3, %rdx # 判断与6的大小
+    jg ABOVE6
+	mrmovq 40(%rdi), %r9
+    je NEXT6
+    iaddq $1, %rdx # 判断与5的大小
+	mrmovq 24(%rdi), %r9
+    jl NEXT4
+	mrmovq 32(%rdi), %r8 
+    je NEXT5
+ABOVE6:
+    iaddq $-2, %rdx # 判断与8的大小
+    mrmovq 48(%rdi), %r8
+	jl NEXT7
+	mrmovq 56(%rdi), %r9
+    je NEXT8
+
+	mrmovq 64(%rdi), %r8 # src[8]
+	mrmovq 56(%rdi), %r9
+	rmmovq %r8, 64(%rsi)
+    andq %r8, %r8
+    jle NEXT8
+    iaddq $1, %rax
+
+NEXT8:
+    mrmovq 48(%rdi), %r8
+    rmmovq %r9, 56(%rsi)
+    andq %r9, %r9
+	jle NEXT7
+    iaddq $1, %rax
+
+NEXT7:
+    mrmovq 40(%rdi), %r9
+    rmmovq %r8, 48(%rsi)
+    andq %r8, %r8
+	jle NEXT6
+    iaddq $1, %rax
+
+NEXT6:
+    mrmovq 32(%rdi), %r8
+    rmmovq %r9, 40(%rsi)
+    andq %r9, %r9
+	jle NEXT5
+    iaddq $1, %rax
+
+NEXT5:
+    mrmovq 24(%rdi), %r9
+    rmmovq %r8, 32(%rsi)
+    andq %r8, %r8
+	jle NEXT4
+    iaddq $1, %rax
+
+NEXT4:
+    mrmovq 16(%rdi), %r8
+    rmmovq %r9, 24(%rsi)
+    andq %r9, %r9
+	jle NEXT3
+    iaddq $1, %rax
+
+NEXT3:
+    mrmovq 8(%rdi), %r9
+    rmmovq %r8, 16(%rsi)
+    andq %r8, %r8
+	jle NEXT2
+    iaddq $1, %rax
+
+NEXT2:
+    mrmovq (%rdi), %r8
+    rmmovq %r9, 8(%rsi)
+    andq %r9, %r9
+	jle NEXT1
+    iaddq $1, %rax
+
+NEXT1:
+    rmmovq %r8, (%rsi)
+    andq %r8, %r8
+	jle Done
+    iaddq $1, %rax
+	
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	ret
+##################################################################
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */
+EndFun:
+
+###############################
+# Source and destination blocks 
+###############################
+	.align 8
+src:
+	.quad 1
+	.quad -2
+	.quad -3
+	.quad 4
+	.quad 0xbcdefa # This shouldn't get moved
+
+	.align 16
+Predest:
+	.quad 0xbcdefa
+dest:
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+	.quad 0xcdefab
+Postdest:
+	.quad 0xdefabc
+
+.align 8
+# Run time stack
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+	.quad 0
+
+Stack:
