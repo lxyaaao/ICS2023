@@ -1,7 +1,5 @@
 /*
  * proxy.c
- *
- * 刘昕垚 2200012866 
  * 
  * proxy main code
  * In this lab, I achieve a simple HTTP proxy that caches web objects
