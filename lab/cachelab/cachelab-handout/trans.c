@@ -1,5 +1,3 @@
-//刘昕垚 2200012866
-
 /*
  * trans.c - Matrix transpose B = A^T
  *
