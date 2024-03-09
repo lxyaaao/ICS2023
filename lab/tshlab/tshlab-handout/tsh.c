@@ -2,7 +2,6 @@
  * tsh - A tiny shell program with job control
  * 
  * <Put your name and login ID here>
- * 刘昕垚 220012866
  */
 #include <assert.h>
 #include <stdio.h>
