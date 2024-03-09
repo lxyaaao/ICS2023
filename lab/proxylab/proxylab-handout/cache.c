@@ -1,7 +1,5 @@
 /*
  * cache.c
- *
- * 刘昕垚 2200012866 
  * 
  * cache main code
  * In this part, I check the cache and update it.
