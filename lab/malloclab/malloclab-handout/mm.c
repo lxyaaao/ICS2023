@@ -1,8 +1,6 @@
 /*
  * mm.c
  * 
- * 刘昕垚 2200012866
- * 
  * In this lab, I try to write a dynamic storage allocator 
  *          with explicit free lists
  * 
